@@ -1,3 +1,25 @@
+function respond(res, next, status, data, http_code) {
+  var response = {
+    'status': status,
+    'data': data
+  };
+
+  res.setHeader('content-type', 'application/json');
+  res.writeHead(http_code);
+  res.end(JSON.stringify(response));
+  return next();
+};
+
+function success(res, next, data) {
+  respond(res, next, 'success', data, 200)
+};
+
+function failure(res, next, data, http_code) {
+  respond(res, next, 'failure', data, http_code)
+};
+
+
+
 const restify = require('restify'),
       server = restify.createServer();
 
@@ -14,19 +36,11 @@ server.use(restify.plugins.bodyParser());
 
 
 server.get('/', (req, res, next) => {
-  res.setHeader('content-type', 'application/json');
-  res.writeHead(200);
-  res.end(JSON.stringify(Users));
-  return next();
+  success(res, next, Users);
 });
 
-
-
 server.get('/user/:id', (req, res, next) => {
-  res.setHeader('content-type', 'application/json');
-  res.writeHead(200);
-  res.end(JSON.stringify(Users[parseInt(req.params.id)]));
-  return next();
+  success(res, next, Users[parseInt(req.params.id)]);
 });
 
 
@@ -36,11 +50,8 @@ server.post('/user', (req, res, next) => {
   user.id = max_user_id;
   Users[user.id] = user;
 
-  res.setHeader('content-type', 'application/json');
-  res.writeHead(200);
-  res.end(JSON.stringify(user));
-  return next();
-})
+  success(res, next, user)
+});
 
 
 server.put('/user/:id', (req, res, next) => {
@@ -51,24 +62,14 @@ server.put('/user/:id', (req, res, next) => {
     user[field] = updates[field]
   }
 
-  res.setHeader('content-type', 'application/json');
-  res.writeHead(200);
-  res.end(JSON.stringify(user));
-  return next();
-})
-
-
+  success(res, next, user);
+});
 
 server.del('/user/:id', (req, res, next) => {
   delete Users[parseInt(req.params.id)];
 
-  res.setHeader('content-type', 'application/json');
-  res.writeHead(200);
-  res.end(JSON.stringify(true));
-  return next();
+  success(res, next, [])
 });
-
-
 
 
 
