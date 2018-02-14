@@ -40,6 +40,9 @@ server.get('/', (req, res, next) => {
 });
 
 server.get('/user/:id', (req, res, next) => {
+  if(typeof(Users[req.params.id]) === 'undefined') {
+    failure(res, next, 'The specified user could not be found', 404)
+  }
   success(res, next, Users[parseInt(req.params.id)]);
 });
 
@@ -55,9 +58,12 @@ server.post('/user', (req, res, next) => {
 
 
 server.put('/user/:id', (req, res, next) => {
+  if(typeof(Users[req.params.id]) === 'undefined') {
+    failure(res, next, 'The specified user could not be found', 404)
+  }
+
   var user = Users[parseInt(req.params.id)];
   var updates = req.params;
-
   for(var field in updates) {
     user[field] = updates[field]
   }
@@ -66,6 +72,9 @@ server.put('/user/:id', (req, res, next) => {
 });
 
 server.del('/user/:id', (req, res, next) => {
+  if(typeof(Users[req.params.id]) === 'undefined') {
+    failure(res, next, 'The specified user could not be found', 404)
+  }
   delete Users[parseInt(req.params.id)];
 
   success(res, next, [])
