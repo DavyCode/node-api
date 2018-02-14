@@ -1,26 +1,34 @@
 var helpers = require('../config/helpers');
+var Users = require('../models/user');
 
-var Users = {};
 var max_user_id = 0;
 
 
 module.exports = function (server) {
   
   server.get('/', (req, res, next) => {
-     helpers.success(res, next, Users);
+    Users.find({}, (err, users) => {
+      helpers.success(res, next, users);
+    }) 
   });
 
   server.get('/user/:id', (req, res, next) => {
-    req.assert('id', 'Id is required and must be numeric').notEmpty().isInt();
+    req.assert('id', 'Id is required and must be numeric').notEmpty();
     var errors = req.validationErrors();
     if(errors) {
       helpers.failure(res, next, errors[0], 400);
     }
 
-    if(typeof(Users[req.params.id]) === 'undefined') {
-      helpers.failure(res, next, 'The specified user could not be found', 404)
-    }
-     helpers.success(res, next, Users[parseInt(req.params.id)]);
+    Users.findOne({_id : req.params.id}, (err, user) => {
+      if(!user){
+        helpers.failure(res, next, "The specified user wasn't found", 404);
+      }
+      if(err){
+        helpers.failure(res, next, "Error fetching user from database", 500);
+      }
+      helpers.success(res, next, user);
+    })
+
   });
 
 
@@ -36,50 +44,77 @@ module.exports = function (server) {
       helpers.failure(res, next, errors[0], 400);
       return false;
     }
-    var user = req.params;
-    max_user_id += 1;
-    user.id = max_user_id;
-    Users[user.id] = user;
 
-    helpers.success(res, next, user)
+    var user = new Users();
+    user.first_name = req.params.first_name;
+    user.last_name = req.params.last_name;
+    user.email = req.params.email;
+    user.location = req.params.location;
+
+    user.save((err) => {
+      if(err){
+      helpers.failure(res, next, errors, 500);
+      }
+      helpers.success(res, next, user);
+    });
+ 
   });
 
 
   server.put('/user/:id', (req, res, next) => {
-    req.assert('id', 'Id is required and must be numeric').notEmpty().isInt();
+    req.assert('id', 'Id is required and must be numeric').notEmpty();
     var errors = req.validationErrors();
     if(errors) {
       helpers.failure(res, next, errors[0], 400);
     }
 
-    if(typeof(Users[req.params.id]) === 'undefined') {
-      helpers.failure(res, next, 'The specified user could not be found', 404)
-    }
+    Users.findOne({_id : req.params.id}, (err, user) => {
+      if(!user){
+        helpers.failure(res, next, "The specified user wasn't found", 404);
+      }
+      if(err){
+        helpers.failure(res, next, "Error fetching user from database", 500);
+      }
 
-    var user = Users[parseInt(req.params.id)];
-    var updates = req.params;
-    for(var field in updates) {
-      user[field] = updates[field]
-    }
-
-     helpers.success(res, next, user);
+      var updates = req.params;
+      
+      for(var field in updates) {
+        user[field] = updates[field];
+      }
+      user.save((err) => {
+        if(err){
+            helpers.failure(res, next, 'Failed to update user data', 500);
+        }
+            helpers.success(res, next, user);
+      });
+    });
   });
 
 
 
+
   server.del('/user/:id', (req, res, next) => {
-    req.assert('id', 'Id is required and must be numeric').notEmpty().isInt();
+    req.assert('id', 'Id is required and must be numeric').notEmpty();
     var errors = req.validationErrors();
     if(errors) {
       helpers.failure(res, next, errors[0], 400);
     }
 
-    if(typeof(Users[req.params.id]) === 'undefined') {
-      helpers.failure(res, next, 'The specified user could not be found', 404)
-    }
-    delete Users[parseInt(req.params.id)];
+    Users.findOne({_id : req.params.id}, (err, user) => {
+      if(!user){
+        helpers.failure(res, next, "The specified user wasn't found", 404);
+      }
+      if(err){
+        helpers.failure(res, next, "Error fetching user from database", 500);
+      }
 
-     helpers.success(res, next, [])
+      user.remove((err) => {
+        if(err){
+            helpers.failure(res, next, 'Error deleting user data', 500);
+        }
+            helpers.success(res, next, user);
+      });
+    })
   });
     
 }
