@@ -68,6 +68,7 @@ server.put('/user/:id', (req, res, next) => {
     user[field] = updates[field]
   }
 
+  
   success(res, next, user);
 });
 
