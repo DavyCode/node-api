@@ -5,8 +5,13 @@ var Users = {};
 var max_user_id = 0;
 
 server.use(restify.plugins.acceptParser(server.acceptable));
-// server.use(restify.acceptParser(server.acceptable));
+server.use(restify.plugins.queryParser());
 server.use(restify.plugins.bodyParser());
+
+
+
+
+
 
 server.get('/', (req, res, next) => {
   res.setHeader('content-type', 'application/json');
@@ -15,6 +20,14 @@ server.get('/', (req, res, next) => {
   return next();
 });
 
+
+
+server.get('/user/:id', (req, res, next) => {
+  res.setHeader('content-type', 'application/json');
+  res.writeHead(200);
+  res.end(JSON.stringify(Users[parseInt(req.params.id)]));
+  return next();
+});
 
 
 server.post('/user', (req, res, next) => {
@@ -28,6 +41,34 @@ server.post('/user', (req, res, next) => {
   res.end(JSON.stringify(user));
   return next();
 })
+
+
+server.put('/user/:id', (req, res, next) => {
+  var user = Users[parseInt(req.params.id)];
+  var updates = req.params;
+
+  for(var field in updates) {
+    user[field] = updates[field]
+  }
+
+  res.setHeader('content-type', 'application/json');
+  res.writeHead(200);
+  res.end(JSON.stringify(user));
+  return next();
+})
+
+
+
+server.del('/user/:id', (req, res, next) => {
+  delete Users[parseInt(req.params.id)];
+
+  res.setHeader('content-type', 'application/json');
+  res.writeHead(200);
+  res.end(JSON.stringify(true));
+  return next();
+});
+
+
 
 
 
